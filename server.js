@@ -206,6 +206,40 @@ app.get('/api/export-excel', (req, res) => {
   });
 });
 
+// 取得指定月份（或雙月）總薪資 API
+app.get('/api/stats/monthly', (req, res) => {
+  const { year, months } = req.query; // 例如 year=2026, months=8 或 months=7,8
+  
+  if (!year || !months) {
+    return res.status(400).json({ error: '請提供年份與月份參數' });
+  }
+
+  const monthArray = months.split(',').map(m => m.padStart(2, '0'));
+  // 建立 SQL 篩選條件，比對 pay_date 或 start_time 的月份
+  const placeholders = monthArray.map(() => '?').join(',');
+  
+  const sql = `
+    SELECT 
+      SUM(total_pay) as grand_total,
+      SUM(duration_hours) as total_hours,
+      COUNT(*) as shift_count
+    FROM work_logs 
+    WHERE strftime('%Y', start_time) = ? 
+      AND strftime('%m', start_time) IN (${placeholders})
+  `;
+
+  db.get(sql, [year, ...monthArray], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({
+      grand_total: row.grand_total || 0,
+      total_hours: row.total_hours || 0,
+      shift_count: row.shift_count || 0
+    });
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`打工記帳系統已啟動: http://localhost:${PORT}`);
 });
