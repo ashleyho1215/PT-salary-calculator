@@ -581,6 +581,31 @@
       document.getElementById('editModal').style.display = 'none';
     }
 
+    async function fetchMonthlyStats() {
+  const year = document.getElementById('statYear').value;
+  const months = document.getElementById('statRange').value;
+  const resultDiv = document.getElementById('statResult');
+
+  try {
+    const response = await fetch(`/api/stats/monthly?year=${year}&months=${months}`);
+    const data = await response.json();
+
+    const rangeText = months === '7,8' ? '7~8 月雙月' : `${months} 月`;
+    
+    resultDiv.innerHTML = `
+      💰 <strong>${year} 年 ${rangeText} 總收入：</strong> 
+      <span style="color: #d9534f; font-size: 1.3em;">$${data.grand_total.toLocaleString()} 元</span>
+      <br>
+      <small style="color: #666; font-weight: normal;">
+        (總工時：${data.total_hours} 小時 / 共 ${data.shift_count} 筆班表)
+      </small>
+    `;
+  } catch (error) {
+    console.error('查詢失敗:', error);
+    resultDiv.innerText = '查詢失敗，請稍後再試';
+  }
+}
+    
     // 儲存修改內容
     document.getElementById('editForm').addEventListener('submit', async (e) => {
       e.preventDefault();
