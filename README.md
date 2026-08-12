@@ -37,7 +37,7 @@ A simple, efficient, and user-friendly web application designed for part-time wo
 
 ---------中文版README---------
 
-# 💰 黃金暖陽打工薪資與排班管理金庫
+# 💰 努力打拚薪資與排班管理金庫
 
 一款專為兼職打工族設計的輕量級、高效率 Web 應用程式。基於 Express 與 SQLite 開發，能幫助你輕鬆記錄工作時數、自動計算薪資細項、一次批量建立多天排班，並快速進行發薪日對帳。
 
