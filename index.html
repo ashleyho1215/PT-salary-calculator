@@ -271,6 +271,29 @@
       </form>
     </div>
 
+    <!-- 月份薪資統計區塊 -->
+<div class="stat-card" style="background: #fff8e7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+  <h3>📊 期間薪資統計</h3>
+  <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+    <select id="statYear">
+      <option value="2026">2026 年</option>
+      <option value="2025">2025 年</option>
+    </select>
+    
+    <select id="statRange">
+      <option value="8">僅看 8 月</option>
+      <option value="7,8">7 月 + 8 月 (雙月劃算)</option>
+      <option value="7">僅看 7 月</option>
+    </select>
+    
+    <button onclick="fetchMonthlyStats()" style="background: #e6a100; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">查詢金額</button>
+  </div>
+
+  <div id="statResult" style="font-size: 1.1em; font-weight: bold; color: #333;">
+    請點擊查詢按鈕查看總金額
+  </div>
+</div>
+    
     <!-- 發薪日快速對帳專區 -->
     <div class="card" style="background-color: #FFFDF0; border-color: #8D5B4C;">
       <h2 style="margin-top:0; color: #5C3A21;">🔍 發薪日快速對帳專區</h2>
