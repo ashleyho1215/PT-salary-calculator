@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>努力打拚記帳金庫 💰</title>
+  <style>
+    :root {
+      --theme-yellow: #FFF3A7;
+      --theme-dark-yellow: #FFDE59;
+      --theme-brown: #5C3A21;
+      --theme-light-brown: #8D5B4C;
+      --theme-bg: #FFFDF0;
+      --theme-white: #FFFFFF;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: var(--theme-bg);
+      color: var(--theme-brown);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 950px;
+    }
+
+    header {
+      text-align: center;
+      background-color: var(--theme-dark-yellow);
+      padding: 20px;
+      border-radius: 20px;
+      border: 4px solid var(--theme-brown);
+      box-shadow: 0 6px 0px var(--theme-brown);
+      margin-bottom: 25px;
+    }
+
+    h1 { margin: 0; font-size: 28px; color: var(--theme-brown); }
+
+    .card {
+      background-color: var(--theme-white);
+      border: 3px solid var(--theme-brown);
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 0px var(--theme-brown);
+    }
+
+    .tab-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .tab-btn {
+      padding: 10px 20px;
+      background-color: var(--theme-yellow);
+      border: 2px solid var(--theme-brown);
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      color: var(--theme-brown);
+    }
+
+    .tab-btn.active {
+      background-color: var(--theme-dark-yellow);
+      box-shadow: 0 2px 0px var(--theme-brown);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+
+    input {
+      padding: 10px;
+      border: 2px solid var(--theme-brown);
+      border-radius: 10px;
+      background-color: var(--theme-yellow);
+      color: var(--theme-brown);
+      font-weight: bold;
+      outline: none;
+    }
+
+    input:focus { background-color: var(--theme-white); }
+
+    .btn-group { margin-top: 20px; display: flex; gap: 10px; }
+
+    button {
+      flex: 1;
+      padding: 12px;
+      background-color: var(--theme-brown);
+      color: var(--theme-yellow);
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.1s, background-color 0.2s;
+    }
+
+    button:hover { background-color: var(--theme-light-brown); }
+    button:active { transform: translateY(2px); }
+
+    .btn-export { background-color: #6CBE45; color: white; }
+    .btn-export:hover { background-color: #58A035; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 2px solid var(--theme-brown); padding: 10px; text-align: center; font-size: 14px; }
+    th { background-color: var(--theme-dark-yellow); }
+    td { background-color: var(--theme-yellow); }
+
+    .btn-edit { background-color: #3498DB; color: white; padding: 5px 10px; font-size: 12px; border-radius: 6px; margin-right: 4px; }
+    .btn-edit:hover { background-color: #2980B9; }
+    .btn-del { background-color: #E74C3C; color: white; padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+    .btn-del:hover { background-color: #C0392B; }
+
+    .notice { font-size: 12px; color: var(--theme-light-brown); margin-top: 8px; }
+
+    .date-tag {
+      display: inline-flex;
+      align-items: center;
+      background: var(--theme-dark-yellow);
+      border: 1px solid var(--theme-brown);
+      padding: 4px 8px;
+      border-radius: 6px;
+      margin: 4px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .date-tag span { margin-left: 6px; cursor: pointer; color: red; }
+
+    .modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000;
+    }
+
+    .modal-content {
+      background: var(--theme-bg); border: 4px solid var(--theme-brown); border-radius: 20px;
+      padding: 25px; width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 8px 0px var(--theme-brown);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>✨ 打工薪資管理金庫 💼</h1>
+      <p style="margin-top: 5px; font-weight: bold;">輕鬆記錄與彙整每一筆獨立打工活動！</p>
+    </header>
+
+    <!-- 新增紀錄表單區塊 (支援單筆 / 批量模式) -->
+    <div class="card">
+      <div class="tab-group">
+        <button class="tab-btn active" onclick="switchTab('single')">✍️ 單筆新增模式</button>
+        <button class="tab-btn" onclick="switchTab('batch')">⚡ 多日期批量新增模式</button>
+      </div>
+
+      <!-- 單筆模式 -->
+      <form id="singleForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>工作名稱</label>
+            <input type="text" id="job_name" placeholder="例如：展覽單日工讀" required>
+          </div>
+          <div class="form-group">
+            <label>時薪 ($)</label>
+            <input type="number" id="hourly_rate" placeholder="183" required>
+          </div>
+          <div class="form-group">
+            <label>開始時間</label>
+            <input type="datetime-local" id="start_time" required>
+          </div>
+          <div class="form-group">
+            <label>結束時間</label>
+            <input type="datetime-local" id="end_time" required>
+          </div>
+          <div class="form-group">
+            <label>勞健保費用扣除 ($)</label>
+            <input type="number" id="insurance" value="0">
+          </div>
+          <div class="form-group">
+            <label>餐費補助 ($)</label>
+            <input type="number" id="meal_allowance" value="0">
+          </div>
+          <div class="form-group">
+            <label>轉帳/手續費扣除 ($)</label>
+            <input type="number" id="fee" value="0">
+          </div>
+          <div class="form-group">
+            <label>預計發薪日期</label>
+            <input type="date" id="pay_date">
+          </div>
+        </div>
+        <p class="notice">* 系統自動計算時數。單天超過 8 小時部分，時薪將自動以 1.34 倍計算加班費。</p>
+        <div class="btn-group">
+          <button type="submit">儲存此筆紀錄 💾</button>
+        </div>
+      </form>
+
+      <!-- 批量模式 (隱藏預設) -->
+      <form id="batchForm" style="display: none;">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>工作名稱</label>
+            <input type="text" id="b_job_name" placeholder="例如：暑期活動導覽" required>
+          </div>
+          <div class="form-group">
+            <label>時薪 ($)</label>
+            <input type="number" id="b_hourly_rate" placeholder="183" required>
+          </div>
+          <div class="form-group">
+            <label>每日開始時間 (時刻)</label>
+            <input type="time" id="b_start_time_of_day" value="09:00" required>
+          </div>
+          <div class="form-group">
+            <label>每日結束時間 (時刻)</label>
+            <input type="time" id="b_end_time_of_day" value="18:00" required>
+          </div>
+          <div class="form-group">
+            <label>每日保費扣除 ($)</label>
+            <input type="number" id="b_insurance" value="0">
+          </div>
+          <div class="form-group">
+            <label>每日餐費補助 ($)</label>
+            <input type="number" id="b_meal_allowance" value="0">
+          </div>
+          <div class="form-group">
+            <label>每日手續費扣除 ($)</label>
+            <input type="number" id="b_fee" value="0">
+          </div>
+          <div class="form-group">
+            <label>統一預計發薪日期</label>
+            <input type="date" id="b_pay_date">
+          </div>
+        </div>
+
+        <hr style="border: 1px dashed #5C3A21; margin: 15px 0;">
+
+        <!-- 多日期挑選器 -->
+        <div class="form-group">
+          <label>選擇工作日期（可連續挑選多個不同日期）：</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="date" id="b_date_picker">
+            <button type="button" onclick="addBatchDate()" style="flex: none; padding: 10px 20px;">加入日期 ➕</button>
+          </div>
+          <div id="selectedDatesContainer" style="margin-top: 10px; min-height: 40px; border: 2px dashed #5C3A21; padding: 8px; border-radius: 10px; background: #FFF;">
+            <span style="color: #999; font-size: 13px;">尚未選擇日期...</span>
+          </div>
+        </div>
+
+        <p class="notice">* 系統會根據選取的每個日期與每日時間，一口氣生成獨立的打工紀錄！</p>
+        <div class="btn-group">
+          <button type="submit" style="background-color: #E67E22;">一次產生所有日期的打工紀錄 🚀</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 發薪日快速對帳專區 -->
+    <div class="card" style="background-color: #FFFDF0; border-color: #8D5B4C;">
+      <h2 style="margin-top:0; color: #5C3A21;">🔍 發薪日快速對帳專區</h2>
+      <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+        <div class="form-group" style="flex: 1; min-width: 200px;">
+          <label>選擇要對帳的發薪日期：</label>
+          <input type="date" id="check_pay_date">
+        </div>
+        <button onclick="checkPayDate()" style="flex: none; width: auto; padding: 10px 25px;">查詢當天應入帳金額 📊</button>
+      </div>
+
+      <div id="checkResult" style="margin-top: 15px; display: none;">
+        <hr style="border: 1px dashed #5C3A21; margin: 15px 0;">
+        <div style="background-color: #FFDE59; padding: 15px; border-radius: 12px; border: 2px solid #5C3A21; text-align: center; margin-bottom: 15px;">
+          <h3 style="margin: 0; color: #5C3A21; font-size: 20px;">
+            📅 <span id="resDate"></span> 當天預計匯入總金額：
+            <span id="resTotal" style="color: #D32F2F; font-size: 26px; text-decoration: underline;">$0</span> 元
+          </h3>
+        </div>
+
+        <h4>當日應發薪之打工明細：</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>工作名稱</th>
+              <th>工作時間區間</th>
+              <th>工作時數</th>
+              <th>實領金額</th>
+            </tr>
+          </thead>
+          <tbody id="checkTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 彙整資料與匯出 -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <h2 style="margin:0;">📊 打工明細彙整</h2>
+        <button class="btn-export" onclick="exportToExcel()" style="flex: none; width: auto; padding: 10px 20px;">匯出 Excel 試算表 📥</button>
+      </div>
+
+      <div style="overflow-x: auto; margin-top: 15px;">
+        <table>
+          <thead>
+            <tr>
+              <th>工作名稱</th>
+              <th>時數</th>
+              <th>時薪</th>
+              <th>保費</th>
+              <th>餐費</th>
+              <th>手續費</th>
+              <th>預計發薪日</th>
+              <th>實領總計</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 修改資料 Modal 彈出視窗 -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <h2 style="margin-top:0;">✏️ 修改打工紀錄</h2>
+      <form id="editForm">
+        <input type="hidden" id="edit_id">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>工作名稱</label>
+            <input type="text" id="edit_job_name" required>
+          </div>
+          <div class="form-group">
+            <label>時薪 ($)</label>
+            <input type="number" id="edit_hourly_rate" required>
+          </div>
+          <div class="form-group">
+            <label>開始時間</label>
+            <input type="datetime-local" id="edit_start_time" required>
+          </div>
+          <div class="form-group">
+            <label>結束時間</label>
+            <input type="datetime-local" id="edit_end_time" required>
+          </div>
+          <div class="form-group">
+            <label>勞健保費用扣除 ($)</label>
+            <input type="number" id="edit_insurance">
+          </div>
+          <div class="form-group">
+            <label>餐費補助 ($)</label>
+            <input type="number" id="edit_meal_allowance">
+          </div>
+          <div class="form-group">
+            <label>轉帳/手續費扣除 ($)</label>
+            <input type="number" id="edit_fee">
+          </div>
+          <div class="form-group">
+            <label>預計發薪日期</label>
+            <input type="date" id="edit_pay_date">
+          </div>
+        </div>
+        <div class="btn-group" style="margin-top:20px;">
+          <button type="submit" style="background-color: #3498DB;">更新紀錄 💾</button>
+          <button type="button" onclick="closeModal()" style="background-color: #7F8C8D;">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let allLogsCache = [];
+    let selectedBatchDates = [];
+
+    // 切換模式頁籤
+    function switchTab(mode) {
+      const btns = document.querySelectorAll('.tab-btn');
+      btns.forEach(b => b.classList.remove('active'));
+
+      if (mode === 'single') {
+        btns[0].classList.add('active');
+        document.getElementById('singleForm').style.display = 'block';
+        document.getElementById('batchForm').style.display = 'none';
+      } else {
+        btns[1].classList.add('active');
+        document.getElementById('singleForm').style.display = 'none';
+        document.getElementById('batchForm').style.display = 'block';
+      }
+    }
+
+    // 批量模式：增加日期
+    function addBatchDate() {
+      const picker = document.getElementById('b_date_picker');
+      const val = picker.value;
+      if (!val) {
+        alert('請先選擇日期！');
+        return;
+      }
+      if (selectedBatchDates.includes(val)) {
+        alert('這個日期已經加入過囉！');
+        return;
+      }
+      selectedBatchDates.push(val);
+      selectedBatchDates.sort();
+      renderDateTags();
+      picker.value = '';
+    }
+
+    // 批量模式：移除日期
+    function removeBatchDate(dateStr) {
+      selectedBatchDates = selectedBatchDates.filter(d => d !== dateStr);
+      renderDateTags();
+    }
+
+    // 渲染日期標籤
+    function renderDateTags() {
+      const container = document.getElementById('selectedDatesContainer');
+      if (selectedBatchDates.length === 0) {
+        container.innerHTML = `<span style="color: #999; font-size: 13px;">尚未選擇日期...</span>`;
+        return;
+      }
+      container.innerHTML = selectedBatchDates.map(d => `
+        <span class="date-tag">
+          📅 ${d} <span onclick="removeBatchDate('${d}')">✖</span>
+        </span>
+      `).join('');
+    }
+
+    // 載入資料列表
+    async function fetchLogs() {
+      const res = await fetch('/api/work-logs');
+      allLogsCache = await res.json();
+      const tbody = document.getElementById('logTableBody');
+      tbody.innerHTML = '';
+
+      allLogsCache.forEach(log => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${log.job_name}</strong></td>
+          <td>${log.duration_hours} hrs</td>
+          <td>$${log.hourly_rate}</td>
+          <td>-$${log.insurance}</td>
+          <td>+$${log.meal_allowance}</td>
+          <td>-$${log.fee}</td>
+          <td>${log.pay_date || '未定'}</td>
+          <td style="color:#5C3A21; font-weight:bold;">$${log.total_pay}</td>
+          <td>
+            <button class="btn-edit" onclick="openEditModal(${log.id})">修改</button>
+            <button class="btn-del" onclick="deleteLog(${log.id})">刪除</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 單筆送出
+    document.getElementById('singleForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        job_name: document.getElementById('job_name').value,
+        hourly_rate: document.getElementById('hourly_rate').value,
+        start_time: document.getElementById('start_time').value,
+        end_time: document.getElementById('end_time').value,
+        insurance: document.getElementById('insurance').value,
+        meal_allowance: document.getElementById('meal_allowance').value,
+        fee: document.getElementById('fee').value,
+        pay_date: document.getElementById('pay_date').value
+      };
+
+      const res = await fetch('/api/work-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        alert('成功新增一筆打工紀錄！');
+        document.getElementById('singleForm').reset();
+        fetchLogs();
+      } else {
+        const err = await res.json();
+        alert('錯誤: ' + err.error);
+      }
+    });
+
+    // 批量送出
+    document.getElementById('batchForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (selectedBatchDates.length === 0) {
+        alert('請至少加入一個工作日期！');
+        return;
+      }
+
+      const payload = {
+        job_name: document.getElementById('b_job_name').value,
+        hourly_rate: document.getElementById('b_hourly_rate').value,
+        start_time_of_day: document.getElementById('b_start_time_of_day').value,
+        end_time_of_day: document.getElementById('b_end_time_of_day').value,
+        insurance: document.getElementById('b_insurance').value,
+        meal_allowance: document.getElementById('b_meal_allowance').value,
+        fee: document.getElementById('b_fee').value,
+        pay_date: document.getElementById('b_pay_date').value,
+        dates: selectedBatchDates
+      };
+
+      const res = await fetch('/api/work-logs/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        alert(data.message);
+        document.getElementById('batchForm').reset();
+        selectedBatchDates = [];
+        renderDateTags();
+        fetchLogs();
+      } else {
+        const err = await res.json();
+        alert('批量建立失敗: ' + err.error);
+      }
+    });
+
+    // 開啟修改 Modal
+    function openEditModal(id) {
+      const item = allLogsCache.find(log => log.id === id);
+      if (!item) return;
+
+      document.getElementById('edit_id').value = item.id;
+      document.getElementById('edit_job_name').value = item.job_name;
+      document.getElementById('edit_hourly_rate').value = item.hourly_rate;
+      document.getElementById('edit_start_time').value = item.start_time;
+      document.getElementById('edit_end_time').value = item.end_time;
+      document.getElementById('edit_insurance').value = item.insurance;
+      document.getElementById('edit_meal_allowance').value = item.meal_allowance;
+      document.getElementById('edit_fee').value = item.fee;
+      document.getElementById('edit_pay_date').value = item.pay_date || '';
+
+      document.getElementById('editModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+
+    // 儲存修改內容
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('edit_id').value;
+      const payload = {
+        job_name: document.getElementById('edit_job_name').value,
+        hourly_rate: document.getElementById('edit_hourly_rate').value,
+        start_time: document.getElementById('edit_start_time').value,
+        end_time: document.getElementById('edit_end_time').value,
+        insurance: document.getElementById('edit_insurance').value,
+        meal_allowance: document.getElementById('edit_meal_allowance').value,
+        fee: document.getElementById('edit_fee').value,
+        pay_date: document.getElementById('edit_pay_date').value
+      };
+
+      const res = await fetch(`/api/work-logs/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        alert('紀錄修改成功！');
+        closeModal();
+        fetchLogs();
+      } else {
+        const err = await res.json();
+        alert('修改失敗: ' + err.error);
+      }
+    });
+
+    // 刪除紀錄
+    async function deleteLog(id) {
+      if (confirm('確定要刪除這筆打工紀錄嗎？')) {
+        await fetch(`/api/work-logs/${id}`, { method: 'DELETE' });
+        fetchLogs();
+      }
+    }
+
+    // 對帳查詢
+    async function checkPayDate() {
+      const dateVal = document.getElementById('check_pay_date').value;
+      if (!dateVal) {
+        alert('請先選擇要對帳的發薪日期喔！');
+        return;
+      }
+
+      const res = await fetch(`/api/pay-date-check?date=${dateVal}`);
+      const data = await res.json();
+
+      const resultDiv = document.getElementById('checkResult');
+      const tbody = document.getElementById('checkTableBody');
+
+      document.getElementById('resDate').innerText = data.pay_date;
+      document.getElementById('resTotal').innerText = `$${data.total_amount.toLocaleString()}`;
+
+      tbody.innerHTML = '';
+
+      if (data.details.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="background-color: #FFF;">當天沒有排定發薪的打工活動紀錄喔！</td></tr>`;
+      } else {
+        data.details.forEach(item => {
+          const tr = document.createElement('tr');
+          const startStr = item.start_time.replace('T', ' ');
+          const endStr = item.end_time.replace('T', ' ');
+          tr.innerHTML = `
+            <td><strong>${item.job_name}</strong></td>
+            <td>${startStr} ~ ${endStr}</td>
+            <td>${item.duration_hours} hrs</td>
+            <td style="font-weight:bold; color:#5C3A21;">$${item.total_pay}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      resultDiv.style.display = 'block';
+    }
+
+    // 匯出 Excel
+    function exportToExcel() {
+      window.location.href = '/api/export-excel';
+    }
+
+    fetchLogs();
+  </script>
+</body>
+</html>
